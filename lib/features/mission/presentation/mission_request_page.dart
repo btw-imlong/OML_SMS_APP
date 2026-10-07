@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_sms/core/network/dio_client.dart';
+import 'package:flutter_sms/features/mission/data/mission_repository.dart';
+import 'package:flutter_sms/features/mission/presentation/widgets/group_participant_step.dart';
 
 import './widgets/mission_type_card.dart';
 import './widgets/mission_progress.dart';
@@ -15,6 +18,21 @@ class _MissionRequestPageState extends State<MissionRequestPage> {
   int _currentStep = 0;
   String? _missionType;
 
+  final MissionRepository _missionRepository = MissionRepository(DioClient());
+
+  List<int> _participantIds = [];
+  MissionDetailsData _details = const MissionDetailsData(
+    baseLocation: 'HQ — Phnom Penh (Norodom Blvd)',
+    destination: 'Kampong Thom, Kampong Thom — Provincia',
+    travelDate: '09/16/2026',
+    returnDate: '09/16/2026',
+    departureTime: '8:00 AM',
+    arrivalTime: '5:00 PM',
+    purpose: '',
+    additionalInfo: '',
+    overnightRequired: true,
+  );
+
   final List<String> _steps = [
     'Type',
     'Details',
@@ -26,45 +44,70 @@ class _MissionRequestPageState extends State<MissionRequestPage> {
   Widget _buildCurrentStep() {
     switch (_currentStep) {
       case 0:
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Who is travelling on this mission?',
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
-            ),
+        return SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Who is travelling on this mission?',
+                style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
+              ),
 
-            const SizedBox(height: 24),
+              const SizedBox(height: 24),
 
-            MissionTypeCard(
-              title: 'Individual mission',
-              description:
-                  'Only you travel. Allowance is calculated for your grade.',
-              isSelected: _missionType == 'individual',
-              onTap: () {
-                setState(() {
-                  _missionType = 'individual';
-                });
-              },
-            ),
+              MissionTypeCard(
+                title: 'Individual mission',
+                description:
+                    'Only you travel. Allowance is calculated for your grade.',
+                isSelected: _missionType == 'individual',
+                onTap: () {
+                  setState(() {
+                    _missionType = 'individual';
+                    _participantIds = [];
+                  });
+                },
+              ),
 
-            const SizedBox(height: 12),
+              const SizedBox(height: 12),
 
-            MissionTypeCard(
-              title: 'Group mission',
-              description: 'You travel with colleagues under one mission reference and one approval workflow.',
-              isSelected: _missionType == 'group',
-              onTap: () {
-                setState(() {
-                  _missionType = 'group';
-                });
-              },
-            ),
-          ],
+              MissionTypeCard(
+                title: 'Group mission',
+                description: 'You travel with colleagues under one mission reference and one approval workflow.',
+                isSelected: _missionType == 'group',
+                onTap: () {
+                  setState(() {
+                    _missionType = 'group';
+                  });
+                },
+              ),
+
+              if (_missionType == 'group') ...[
+                const SizedBox(height: 24),
+
+                SizedBox(
+                  height: 430,
+                  child: GroupParticipantStep(
+                    repository: _missionRepository,
+                    initialSelectedIds: _participantIds,
+                    onChanged: (ids) {
+                      setState(() {
+                        _participantIds = ids;
+                      });
+                    },
+                  ),
+                ),
+              ],
+            ],
+          ),
         );
 
       case 1:
-        return const MissionDetailsStep();
+        return MissionDetailsStep(
+          initialData: _details,
+          onChanged: (data) {
+            _details = data;
+          },
+        );
 
       default:
         return const SizedBox();

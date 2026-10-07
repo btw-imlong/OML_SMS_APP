@@ -1,34 +1,136 @@
 import 'package:flutter/material.dart';
 
+class MissionDetailsData {
+  final String baseLocation;
+  final String destination;
+  final String travelDate;
+  final String returnDate;
+  final String departureTime;
+  final String arrivalTime;
+  final String purpose;
+  final String additionalInfo;
+  final bool overnightRequired;
+
+  const MissionDetailsData({
+    required this.baseLocation,
+    required this.destination,
+    required this.travelDate,
+    required this.returnDate,
+    required this.departureTime,
+    required this.arrivalTime,
+    required this.purpose,
+    required this.additionalInfo,
+    required this.overnightRequired,
+  });
+
+  int get numberOfTravelDays {
+    final departure = _parseDate(travelDate);
+    final arrival = _parseDate(returnDate);
+
+    if (departure == null || arrival == null) {
+      return 1;
+    }
+
+    final difference = arrival.difference(departure).inDays;
+
+    return difference < 0 ? 1 : difference + 1;
+  }
+
+  static DateTime? _parseDate(String value) {
+    final parts = value.split('/');
+
+    if (parts.length != 3) {
+      return null;
+    }
+
+    final month = int.tryParse(parts[0]);
+    final day = int.tryParse(parts[1]);
+    final year = int.tryParse(parts[2]);
+
+    if (month == null || day == null || year == null) {
+      return null;
+    }
+
+    return DateTime(year, month, day);
+  }
+}
+
 class MissionDetailsStep extends StatefulWidget {
-  const MissionDetailsStep({super.key});
+  final MissionDetailsData initialData;
+  final ValueChanged<MissionDetailsData> onChanged;
+
+  const MissionDetailsStep({
+    super.key,
+    required this.initialData,
+    required this.onChanged,
+  });
 
   @override
   State<MissionDetailsStep> createState() => _MissionDetailsStepState();
 }
 
 class _MissionDetailsStepState extends State<MissionDetailsStep> {
-  final TextEditingController _purposeController = TextEditingController();
+  late final TextEditingController _purposeController;
+  late final TextEditingController _additionalInfoController;
 
-  final TextEditingController _additionalInfoController =
-      TextEditingController();
+  late String _baseLocation;
+  late String _destination;
 
-  String _baseLocation = 'HQ — Phnom Penh (Norodom Blvd)';
-  String _destination = 'Kampong Thom, Kampong Thom — Provincia';
+  late String _travelDate;
+  late String _returnDate;
 
-  String _travelDate = '09/16/2026';
-  String _returnDate = '09/16/2026';
+  late String _departureTime;
+  late String _arrivalTime;
 
-  String _departureTime = '8:00 AM';
-  String _arrivalTime = '5:00 PM';
+  late bool _overnightRequired;
 
-  bool _overnightRequired = true;
+  @override
+  void initState() {
+    super.initState();
+
+    _purposeController = TextEditingController(
+      text: widget.initialData.purpose,
+    );
+
+    _additionalInfoController = TextEditingController(
+      text: widget.initialData.additionalInfo,
+    );
+
+    _baseLocation = widget.initialData.baseLocation;
+    _destination = widget.initialData.destination;
+
+    _travelDate = widget.initialData.travelDate;
+    _returnDate = widget.initialData.returnDate;
+
+    _departureTime = widget.initialData.departureTime;
+    _arrivalTime = widget.initialData.arrivalTime;
+
+    _overnightRequired = widget.initialData.overnightRequired;
+  }
 
   @override
   void dispose() {
     _purposeController.dispose();
     _additionalInfoController.dispose();
     super.dispose();
+  }
+
+  void _notifyChanged() {
+    widget.onChanged(
+      MissionDetailsData(
+        baseLocation: _baseLocation,
+        destination: _destination,
+        travelDate: _travelDate,
+        returnDate: _returnDate,
+        departureTime: _departureTime,
+        arrivalTime: _arrivalTime,
+        purpose: _purposeController.text,
+        additionalInfo: _additionalInfoController.text,
+        overnightRequired: _overnightRequired,
+      ),
+    );
+
+    setState(() {});
   }
 
   @override
@@ -39,7 +141,6 @@ class _MissionDetailsStepState extends State<MissionDetailsStep> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 1. MISSION PURPOSE
           _sectionTitle(
             number: '1',
             title: 'MISSION PURPOSE',
@@ -61,7 +162,7 @@ class _MissionDetailsStepState extends State<MissionDetailsStep> {
             maxLength: 220,
             maxLines: 4,
             onChanged: (_) {
-              setState(() {});
+              _notifyChanged();
             },
             decoration: const InputDecoration(
               hintText: 'e.g. Core network upgrade acceptance testing at the Siem Reap regional hub',
@@ -76,7 +177,6 @@ class _MissionDetailsStepState extends State<MissionDetailsStep> {
             style: TextStyle(fontSize: 12, color: Colors.grey),
           ),
 
-          // 2. ROUTE
           _sectionTitle(number: '2', title: 'ROUTE', colorScheme: colorScheme),
 
           const SizedBox(height: 12),
@@ -96,9 +196,8 @@ class _MissionDetailsStepState extends State<MissionDetailsStep> {
             ],
             onChanged: (value) {
               if (value != null) {
-                setState(() {
-                  _baseLocation = value;
-                });
+                _baseLocation = value;
+                _notifyChanged();
               }
             },
           ),
@@ -120,9 +219,8 @@ class _MissionDetailsStepState extends State<MissionDetailsStep> {
             ],
             onChanged: (value) {
               if (value != null) {
-                setState(() {
-                  _destination = value;
-                });
+                _destination = value;
+                _notifyChanged();
               }
             },
           ),
@@ -134,7 +232,6 @@ class _MissionDetailsStepState extends State<MissionDetailsStep> {
             style: TextStyle(fontSize: 12, color: Colors.grey),
           ),
 
-          // 3. SCHEDULE
           _sectionTitle(
             number: '3',
             title: 'SCHEDULE',
@@ -187,7 +284,6 @@ class _MissionDetailsStepState extends State<MissionDetailsStep> {
 
           const SizedBox(height: 16),
 
-          // Meal information
           Container(
             width: double.infinity,
             padding: const EdgeInsets.all(14),
@@ -199,9 +295,7 @@ class _MissionDetailsStepState extends State<MissionDetailsStep> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Icon(Icons.info_outline, color: colorScheme.primary, size: 18),
-
                 const SizedBox(width: 10),
-
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -214,9 +308,7 @@ class _MissionDetailsStepState extends State<MissionDetailsStep> {
                           color: colorScheme.primary,
                         ),
                       ),
-
                       const SizedBox(height: 6),
-
                       const Text(
                         'Breakfast is eligible when departure is at or before 06:30 and dinner when the return is at or after 19:00.',
                         style: TextStyle(
@@ -232,7 +324,6 @@ class _MissionDetailsStepState extends State<MissionDetailsStep> {
             ),
           ),
 
-          // 4. ACCOMMODATION
           _sectionTitle(
             number: '4',
             title: 'ACCOMMODATION',
@@ -243,9 +334,8 @@ class _MissionDetailsStepState extends State<MissionDetailsStep> {
 
           InkWell(
             onTap: () {
-              setState(() {
-                _overnightRequired = !_overnightRequired;
-              });
+              _overnightRequired = !_overnightRequired;
+              _notifyChanged();
             },
             borderRadius: BorderRadius.circular(12),
             child: Container(
@@ -273,9 +363,7 @@ class _MissionDetailsStepState extends State<MissionDetailsStep> {
                         ? const Icon(Icons.check, color: Colors.white, size: 16)
                         : null,
                   ),
-
                   const SizedBox(width: 12),
-
                   const Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -302,7 +390,6 @@ class _MissionDetailsStepState extends State<MissionDetailsStep> {
 
           const SizedBox(height: 14),
 
-          // Warning
           Container(
             width: double.infinity,
             padding: const EdgeInsets.all(14),
@@ -319,9 +406,7 @@ class _MissionDetailsStepState extends State<MissionDetailsStep> {
                   color: Color(0xFFB7791F),
                   size: 18,
                 ),
-
                 const SizedBox(width: 10),
-
                 const Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -364,7 +449,7 @@ class _MissionDetailsStepState extends State<MissionDetailsStep> {
             maxLength: 280,
             maxLines: 4,
             onChanged: (_) {
-              setState(() {});
+              _notifyChanged();
             },
             decoration: const InputDecoration(
               hintText: 'Anything approvers should know — site contacts, equipment, safety notes',
@@ -408,9 +493,7 @@ class _MissionDetailsStepState extends State<MissionDetailsStep> {
               ),
             ),
           ),
-
           const SizedBox(width: 8),
-
           Text(
             title,
             style: TextStyle(
@@ -446,7 +529,6 @@ class _MissionDetailsStepState extends State<MissionDetailsStep> {
             ],
           ),
         ),
-
         if (counter != null)
           Text(
             counter,

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'package:flutter_sms/navigation/main_navigation.dart';
+import 'package:flutter_sms/features/auth/presentation/splash_screen.dart';
 
 import 'theme.dart';
 
@@ -13,7 +13,7 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'Staff Mission System',
       theme: AppTheme.lightTheme,
-      home: const MainNavigation(),
+      home: const SplashPage(),
     );
   }
 }
