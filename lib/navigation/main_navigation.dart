@@ -1,8 +1,8 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_sms/features/mission/presentation/mission_request_page.dart';
 import 'package:flutter_sms/features/profile/profile_page.dart';
 
-import '../features/home/home_page.dart';
+import '../features/home/presentation/home_page.dart';
 import 'bottom_nav_bar.dart';
 
 class MainNavigation extends StatefulWidget {
@@ -15,12 +15,15 @@ class MainNavigation extends StatefulWidget {
 class _MainNavigationState extends State<MainNavigation> {
   int _currentIndex = 0;
 
-  final List<Widget> _pages = const [
-    HomePage(),
-    Center(child: Text('Mission')),
-    Center(child: Text('Notification')),
-    ProfilePage(),
-  ];
+  List<Widget> get _pages => [
+        HomePage(
+          onProfileTap: () => _selectPage(3),
+          onCreateMission: _createMission,
+        ),
+        const Center(child: Text('Mission')),
+        const Center(child: Text('Notification')),
+        const ProfilePage(),
+      ];
 
   void _selectPage(int index) {
     setState(() {
@@ -39,7 +42,6 @@ class _MainNavigationState extends State<MainNavigation> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: _pages[_currentIndex],
-
       bottomNavigationBar: BottomNavBar(
         currentIndex: _currentIndex,
         onItemSelected: _selectPage,
