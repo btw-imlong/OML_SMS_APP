@@ -4,12 +4,14 @@ class BottomNavBar extends StatefulWidget {
   final int currentIndex;
   final ValueChanged<int> onItemSelected;
   final VoidCallback onCreateMission;
+  final bool approver;
 
   const BottomNavBar({
     super.key,
     required this.currentIndex,
     required this.onItemSelected,
     required this.onCreateMission,
+    this.approver = false,
   });
 
   @override
@@ -29,7 +31,7 @@ class _BottomNavBarState extends State<BottomNavBar> {
         color: colorScheme.surface,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.08),
+            color: Colors.black.withValues(alpha: 0.08),
             blurRadius: 12,
             offset: const Offset(0, -3),
           ),
@@ -59,7 +61,7 @@ class _BottomNavBarState extends State<BottomNavBar> {
             child: _NavItem(
               icon: Icons.assignment_outlined,
               activeIcon: Icons.assignment,
-              label: 'Mission',
+              label: widget.approver ? 'Missions' : 'Mission',
               isSelected: widget.currentIndex == 1,
               isHovered: _hoveredIndex == 1,
               onHover: (hovered) {
@@ -77,9 +79,13 @@ class _BottomNavBarState extends State<BottomNavBar> {
           // NOTIFICATION
           Expanded(
             child: _NavItem(
-              icon: Icons.notifications_outlined,
-              activeIcon: Icons.notifications,
-              label: 'Notification',
+              icon: widget.approver
+                  ? Icons.check_circle_outline_rounded
+                  : Icons.notifications_outlined,
+              activeIcon: widget.approver
+                  ? Icons.check_circle_rounded
+                  : Icons.notifications,
+              label: widget.approver ? 'Approvals' : 'Notification',
               isSelected: widget.currentIndex == 2,
               isHovered: _hoveredIndex == 2,
               onHover: (hovered) {
@@ -224,7 +230,7 @@ class _CreateButton extends StatelessWidget {
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.15),
+                    color: Colors.black.withValues(alpha: 0.15),
                     blurRadius: 10,
                     offset: const Offset(0, 4),
                   ),

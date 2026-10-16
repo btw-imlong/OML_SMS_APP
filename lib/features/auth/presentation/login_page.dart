@@ -1,5 +1,6 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_sms/core/network/dio_client.dart';
+import 'package:flutter_sms/core/storage/session_storage.dart';
 import 'package:flutter_sms/core/storage/token_storage.dart';
 import 'package:flutter_sms/features/auth/data/auth_repository.dart';
 import 'package:flutter_sms/features/auth/presentation/language_selection_page.dart';
@@ -112,6 +113,7 @@ class _LoginPageState extends State<LoginPage>
       );
 
       await TokenStorage().saveToken(result.token);
+      final role = await SessionStorage().saveFromLogin(result);
 
       if (!mounted) return;
 
@@ -119,7 +121,7 @@ class _LoginPageState extends State<LoginPage>
         context,
         PageRouteBuilder(
           transitionDuration: const Duration(milliseconds: 600),
-          pageBuilder: (_, _, _) => const MainNavigation(),
+          pageBuilder: (_, _, _) => MainNavigation(role: role),
           transitionsBuilder: (_, animation, _, child) => FadeTransition(
             opacity: CurvedAnimation(
               parent: animation,

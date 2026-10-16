@@ -1,8 +1,10 @@
-﻿import 'dart:async';
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter_sms/core/models/user_role.dart';
 import 'package:flutter_sms/core/storage/language_storage.dart';
+import 'package:flutter_sms/core/storage/session_storage.dart';
 import 'package:flutter_sms/core/storage/token_storage.dart';
 import 'package:flutter_sms/features/auth/presentation/language_selection_page.dart';
 import 'package:flutter_sms/features/auth/presentation/login_page.dart';
@@ -107,7 +109,8 @@ class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
     try {
       final token = await TokenStorage().getToken();
       if (token != null && token.isNotEmpty) {
-        return const MainNavigation();
+        final role = await SessionStorage().getRole() ?? UserRole.staff;
+        return MainNavigation(role: role);
       }
       final hasLanguage = await LanguageStorage().hasChosenLanguage();
       return hasLanguage ? const LoginPage() : const LanguageSelectionPage();

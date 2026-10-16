@@ -3,10 +3,16 @@ import 'package:flutter_sms/features/mission/presentation/mission_request_page.d
 import 'package:flutter_sms/features/profile/profile_page.dart';
 
 import '../features/home/home_page.dart';
+import 'package:flutter_sms/core/models/user_role.dart';
+import 'package:flutter_sms/features/approver/approver_home_page.dart';
+
+import 'package:flutter_sms/features/home/data/mission_refresh.dart';
 import 'bottom_nav_bar.dart';
 
 class MainNavigation extends StatefulWidget {
-  const MainNavigation({super.key});
+  const MainNavigation({super.key, this.role = UserRole.staff});
+
+  final UserRole role;
 
   @override
   State<MainNavigation> createState() => _MainNavigationState();
@@ -15,11 +21,13 @@ class MainNavigation extends StatefulWidget {
 class _MainNavigationState extends State<MainNavigation> {
   int _currentIndex = 0;
 
-  final List<Widget> _pages = const [
-    HomePage(),
-    Center(child: Text('Mission')),
-    Center(child: Text('Notification')),
-    ProfilePage(),
+  late final List<Widget> _pages = [
+    widget.role.isStaff
+        ? const HomePage()
+        : ApproverHomePage(role: widget.role, onSeeAll: () => _selectPage(1)),
+    const Center(child: Text('Mission')),
+    const Center(child: Text('Notification')),
+    const ProfilePage(),
   ];
 
   void _selectPage(int index) {
@@ -28,11 +36,13 @@ class _MainNavigationState extends State<MainNavigation> {
     });
   }
 
-  void _createMission() {
-    Navigator.push(
+  Future<void> _createMission() async {
+    await Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => const MissionRequestPage()),
     );
+    // Back from the create page: reload the home list.
+    notifyMissionsChanged();
   }
 
   @override
@@ -44,6 +54,7 @@ class _MainNavigationState extends State<MainNavigation> {
         currentIndex: _currentIndex,
         onItemSelected: _selectPage,
         onCreateMission: _createMission,
+        approver: !widget.role.isStaff,
       ),
     );
   }

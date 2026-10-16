@@ -1,3 +1,4 @@
+﻿import 'package:flutter_sms/core/storage/session_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class TokenStorage {
@@ -15,9 +16,11 @@ class TokenStorage {
     return prefs.getString(_tokenKey);
   }
 
+  /// Logout: removes the token and the saved role/name.
   Future<void> clearToken() async {
     final prefs = await SharedPreferences.getInstance();
 
     await prefs.remove(_tokenKey);
+    await SessionStorage().clear();
   }
 }

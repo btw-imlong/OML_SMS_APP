@@ -6,7 +6,7 @@ class MissionTypeCard extends StatelessWidget {
   final bool isSelected;
   final VoidCallback onTap;
 
-  const MissionTypeCard({
+  const MissionTypeCard({super.key, 
     required this.title,
     required this.description,
     required this.isSelected,

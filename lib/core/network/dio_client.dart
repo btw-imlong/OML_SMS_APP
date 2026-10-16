@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 
 import '../storage/token_storage.dart';
 import 'api_config.dart';
@@ -36,9 +37,9 @@ class DioClient {
     try {
       final response = await dio.get('/swagger-ui/index.html');
 
-      print('API connected: ${response.statusCode}');
+      debugPrint('API connected: ${response.statusCode}');
     } catch (e) {
-      print('API connection failed: $e');
+      debugPrint('API connection failed: $e');
     }
   }
 }

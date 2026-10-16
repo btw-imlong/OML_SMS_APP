@@ -1,0 +1,763 @@
+﻿
+===== lib\features\home\data\home_mission.dart =====
+
+import 'package:flutter_sms/features/mission/domain/entities/mission_status.dart';
+
+/// One mission card on the home page.
+/// TODO: add fromJson() when the real API is connected.
+class HomeMission {
+  const HomeMission({
+    required this.id,
+    required this.code,
+    required this.title,
+    required this.location,
+    required this.start,
+    required this.end,
+    required this.type,
+    required this.transport,
+    required this.status,
+    required this.amount,
+    this.note,
+    this.requesterName = '',
+    this.department = '',
+    this.isMine = false,
+  });
+
+  final String id;
+  final String code; // e.g. MSN-2026-0128
+  final String title;
+  final String location;
+  final DateTime start;
+  final DateTime end;
+  final String type; // e.g. Individual
+  final String transport; // e.g. Company Vehicle
+  final MissionStatus status;
+  final double amount;
+  final String? note;
+  final String requesterName;
+  final String department;
+  final bool isMine;
+
+  static const _months = [
+    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+  ];
+
+  int get days => end.difference(start).inDays + 1;
+
+  String get amountLabel => '\$${amount.toStringAsFixed(2)}';
+
+  String get dateLabel {
+    String two(int n) => n.toString().padLeft(2, '0');
+    final m1 = _months[start.month - 1];
+    final m2 = _months[end.month - 1];
+    final String range;
+    if (start.year == end.year &&
+        start.month == end.month &&
+        start.day == end.day) {
+      range = '${two(start.day)} $m1 ${start.year}';
+    } else if (start.year == end.year && start.month == end.month) {
+      range = '${two(start.day)} \u2013 ${two(end.day)} $m1 ${end.year}';
+    } else {
+      range = '${two(start.day)} $m1 \u2013 ${two(end.day)} $m2 ${end.year}';
+    }
+    final unit = days == 1 ? 'day' : 'days';
+    return '$range \u00B7 $days $unit';
+  }
+}
+
+
+===== lib\features\home\data\home_mission_source.dart =====
+
+import 'package:flutter_sms/core/models/user_role.dart';
+import 'package:flutter_sms/features/home/data/home_mission.dart';
+import 'package:flutter_sms/features/mission/domain/entities/mission_status.dart';
+
+/// Where the home page gets its missions.
+/// Right now it returns MOCK data. Later, replace the body of
+/// fetchMissions() with the real API call (Dio) and keep the same signature.
+class HomeMissionSource {
+  Future<List<HomeMission>> fetchMissions(UserRole role) async {
+    await Future.delayed(const Duration(milliseconds: 700)); // fake network
+
+    if (role.isStaff) {
+      // Staff only see their own missions.
+      return _mock.where((m) => m.isMine).toList();
+    }
+    // Other roles see everyone's missions except private drafts.
+    return _mock.where((m) => m.status != MissionStatus.draft).toList();
+  }
+
+  static final List<HomeMission> _mock = [
+    // ---- Johnny's own missions (what staff see) ----
+    HomeMission(
+      id: '1',
+      code: 'MSN-2026-0128',
+      title: 'Customer experience workshop \u2014 Kampot branch',
+      location: 'Kampot, Kampot',
+      start: DateTime(2026, 9, 22),
+      end: DateTime(2026, 9, 22),
+      type: 'Individual',
+      transport: 'Company Vehicle',
+      status: MissionStatus.fmReview,
+      amount: 18,
+      note: 'With Function Manager',
+      requesterName: 'Johnny',
+      department: 'Customer Care',
+      isMine: true,
+    ),
+    HomeMission(
+      id: '2',
+      code: 'MSN-2026-0155',
+      title: 'Coastal POP inspection \u2014 Sihanoukville',
+      location: 'Sihanoukville, Sihanoukville',
+      start: DateTime(2026, 10, 7),
+      end: DateTime(2026, 10, 9),
+      type: 'Individual',
+      transport: 'Contracted Transport',
+      status: MissionStatus.draft,
+      amount: 68,
+      note: 'Not submitted yet',
+      requesterName: 'Johnny',
+      department: 'Customer Care',
+      isMine: true,
+    ),
+    HomeMission(
+      id: '3',
+      code: 'MSN-2026-0139',
+      title: 'Fibre fault escalation support \u2014 Kampong Cham',
+      location: 'Kampong Cham, Kampong Cham',
+      start: DateTime(2026, 9, 4),
+      end: DateTime(2026, 9, 5),
+      type: 'Individual',
+      transport: 'Company Shuttle',
+      status: MissionStatus.settled,
+      amount: 62,
+      note: '2-day mission',
+      requesterName: 'Johnny',
+      department: 'Customer Care',
+      isMine: true,
+    ),
+    HomeMission(
+      id: '4',
+      code: 'MSN-2026-0144',
+      title: 'Site survey for new tower location in Sen Monorom',
+      location: 'Sen Monorom, Mondulkiri',
+      start: DateTime(2026, 9, 30),
+      end: DateTime(2026, 10, 3),
+      type: 'Individual',
+      transport: 'Company Vehicle',
+      status: MissionStatus.rejected,
+      amount: 162,
+      note: 'Returned for editing',
+      requesterName: 'Johnny',
+      department: 'Customer Care',
+      isMine: true,
+    ),
+    HomeMission(
+      id: '5',
+      code: 'MSN-2026-0150',
+      title: 'Partner meeting \u2014 Siem Reap office',
+      location: 'Siem Reap, Siem Reap',
+      start: DateTime(2026, 10, 14),
+      end: DateTime(2026, 10, 15),
+      type: 'Individual',
+      transport: 'Company Vehicle',
+      status: MissionStatus.approved,
+      amount: 120,
+      note: 'Ready to travel',
+      requesterName: 'Johnny',
+      department: 'Customer Care',
+      isMine: true,
+    ),
+    HomeMission(
+      id: '6',
+      code: 'MSN-2026-0152',
+      title: 'Network audit \u2014 Battambang',
+      location: 'Battambang, Battambang',
+      start: DateTime(2026, 9, 10),
+      end: DateTime(2026, 9, 12),
+      type: 'Individual',
+      transport: 'Company Shuttle',
+      status: MissionStatus.reportSubmitted,
+      amount: 95,
+      note: 'Report under review',
+      requesterName: 'Johnny',
+      department: 'Customer Care',
+      isMine: true,
+    ),
+
+    // ---- Other staff (what approvers see) ----
+    HomeMission(
+      id: '7',
+      code: 'MSN-2026-0160',
+      title: 'Vendor negotiation \u2014 Phnom Penh HQ',
+      location: 'Phnom Penh, Phnom Penh',
+      start: DateTime(2026, 10, 16),
+      end: DateTime(2026, 10, 16),
+      type: 'Individual',
+      transport: 'Company Vehicle',
+      status: MissionStatus.fmReview,
+      amount: 40,
+      requesterName: 'Sok Dara',
+      department: 'Procurement',
+    ),
+    HomeMission(
+      id: '8',
+      code: 'MSN-2026-0161',
+      title: 'Data center inspection \u2014 Takeo',
+      location: 'Takeo, Takeo',
+      start: DateTime(2026, 10, 17),
+      end: DateTime(2026, 10, 18),
+      type: 'Group',
+      transport: 'Company Shuttle',
+      status: MissionStatus.hrbpReview,
+      amount: 75,
+      requesterName: 'Chan Sreyneang',
+      department: 'Operations',
+    ),
+    HomeMission(
+      id: '9',
+      code: 'MSN-2026-0162',
+      title: 'Regional staff training \u2014 Kampong Thom',
+      location: 'Kampong Thom, Kampong Thom',
+      start: DateTime(2026, 10, 20),
+      end: DateTime(2026, 10, 22),
+      type: 'Group',
+      transport: 'Contracted Transport',
+      status: MissionStatus.financeReview,
+      amount: 210,
+      requesterName: 'Vireak Ly',
+      department: 'Human Resources',
+    ),
+    HomeMission(
+      id: '10',
+      code: 'MSN-2026-0163',
+      title: 'Field installation \u2014 Preah Vihear',
+      location: 'Preah Vihear, Preah Vihear',
+      start: DateTime(2026, 10, 21),
+      end: DateTime(2026, 10, 25),
+      type: 'Group',
+      transport: 'Company Vehicle',
+      status: MissionStatus.bizopsReview,
+      amount: 330,
+      requesterName: 'Rithy Kem',
+      department: 'Engineering',
+    ),
+    HomeMission(
+      id: '11',
+      code: 'MSN-2026-0164',
+      title: 'Executive site visit \u2014 Koh Kong',
+      location: 'Koh Kong, Koh Kong',
+      start: DateTime(2026, 10, 28),
+      end: DateTime(2026, 10, 30),
+      type: 'Individual',
+      transport: 'Contracted Transport',
+      status: MissionStatus.executiveReview,
+      amount: 540,
+      requesterName: 'Dara Pich',
+      department: 'Sales',
+    ),
+    HomeMission(
+      id: '12',
+      code: 'MSN-2026-0165',
+      title: 'Customer onsite support \u2014 Pursat',
+      location: 'Pursat, Pursat',
+      start: DateTime(2026, 10, 19),
+      end: DateTime(2026, 10, 19),
+      type: 'Individual',
+      transport: 'Company Vehicle',
+      status: MissionStatus.fmReview,
+      amount: 55,
+      requesterName: 'Sophea Nhem',
+      department: 'Support',
+    ),
+    HomeMission(
+      id: '13',
+      code: 'MSN-2026-0166',
+      title: 'Branch visit \u2014 Kratie',
+      location: 'Kratie, Kratie',
+      start: DateTime(2026, 9, 25),
+      end: DateTime(2026, 9, 26),
+      type: 'Individual',
+      transport: 'Company Shuttle',
+      status: MissionStatus.cancelled,
+      amount: 30,
+      requesterName: 'Mony Heng',
+      department: 'Retail',
+    ),
+    HomeMission(
+      id: '14',
+      code: 'MSN-2026-0167',
+      title: 'Equipment delivery \u2014 Svay Rieng',
+      location: 'Svay Rieng, Svay Rieng',
+      start: DateTime(2026, 10, 23),
+      end: DateTime(2026, 10, 23),
+      type: 'Individual',
+      transport: 'Company Vehicle',
+      status: MissionStatus.submitted,
+      amount: 48,
+      requesterName: 'Bopha Seng',
+      department: 'Logistics',
+    ),
+  ];
+}
+
+
+===== lib\features\mission\domain\entities\mission_status.dart =====
+
+import 'package:flutter/material.dart';
+import 'package:flutter_sms/core/models/user_role.dart';
+
+/// Mirrors the backend enum: com.onemore.mission.mission.domain.MissionStatus
+enum MissionStatus {
+  draft('DRAFT', 'Draft', Color(0xFF6B7280), Color(0xFFF1F2F4)),
+  submitted('SUBMITTED', 'Submitted', Color(0xFF1D4ED8), Color(0xFFE6EEFC)),
+  fmReview('FM_REVIEW', 'FM Review', Color(0xFFB45309), Color(0xFFFEF3C7)),
+  hrbpReview('HRBP_REVIEW', 'HRBP Review', Color(0xFFB45309), Color(0xFFFEF3C7)),
+  financeReview('FINANCE_REVIEW', 'Finance Review', Color(0xFFB45309), Color(0xFFFEF3C7)),
+  bizopsReview('BIZOPS_REVIEW', 'BizOps Review', Color(0xFFB45309), Color(0xFFFEF3C7)),
+  executiveReview('EXECUTIVE_REVIEW', 'Executive Review', Color(0xFFB45309), Color(0xFFFEF3C7)),
+  approved('APPROVED', 'Approved', Color(0xFF15803D), Color(0xFFDCFCE7)),
+  rejected('REJECTED', 'Rejected', Color(0xFFB91C1C), Color(0xFFFEE2E2)),
+  cancelled('CANCELLED', 'Cancelled', Color(0xFF4B5563), Color(0xFFE5E7EB)),
+  reportSubmitted('REPORT_SUBMITTED', 'Report Submitted', Color(0xFF0F766E), Color(0xFFCCFBF1)),
+  settled('SETTLED', 'Settled', Color(0xFF6D28D9), Color(0xFFEDE9FE));
+
+  const MissionStatus(this.code, this.label, this.color, this.background);
+
+  /// Value sent by the backend, e.g. FM_REVIEW.
+  final String code;
+  final String label;
+  final Color color;
+  final Color background;
+
+  static MissionStatus? tryParse(String? raw) {
+    if (raw == null) return null;
+    final value = raw.trim().toUpperCase();
+    for (final s in MissionStatus.values) {
+      if (s.code == value) return s;
+    }
+    return null;
+  }
+}
+
+/// Which statuses are "waiting for me" for each role.
+extension UserRoleQueue on UserRole {
+  Set<MissionStatus> get queueStatuses {
+    switch (this) {
+      case UserRole.staff:
+        return const <MissionStatus>{};
+      case UserRole.functionManager:
+        return const {MissionStatus.fmReview};
+      case UserRole.hrbp:
+        return const {MissionStatus.hrbpReview};
+      case UserRole.finance:
+        return const {MissionStatus.financeReview, MissionStatus.reportSubmitted};
+      case UserRole.bizops:
+        return const {MissionStatus.bizopsReview};
+      case UserRole.executive:
+        return const {MissionStatus.executiveReview};
+      case UserRole.admin:
+        return const {
+          MissionStatus.fmReview,
+          MissionStatus.hrbpReview,
+          MissionStatus.financeReview,
+          MissionStatus.bizopsReview,
+          MissionStatus.executiveReview,
+        };
+    }
+  }
+}
+
+
+===== lib\core\network\dio_client.dart =====
+
+import 'package:dio/dio.dart';
+
+import '../storage/token_storage.dart';
+import 'api_config.dart';
+
+class DioClient {
+  final Dio dio;
+  final TokenStorage _tokenStorage;
+
+  DioClient()
+    : _tokenStorage = TokenStorage(),
+      dio = Dio(
+        BaseOptions(
+          baseUrl: ApiConfig.baseUrl,
+          headers: {'Content-Type': 'application/json'},
+          connectTimeout: const Duration(seconds: 10),
+          receiveTimeout: const Duration(seconds: 10),
+        ),
+      ) {
+    dio.interceptors.add(
+      InterceptorsWrapper(
+        onRequest: (options, handler) async {
+          final token = await _tokenStorage.getToken();
+
+          if (token != null && token.isNotEmpty) {
+            options.headers['Authorization'] = 'Bearer $token';
+          }
+
+          handler.next(options);
+        },
+      ),
+    );
+  }
+
+  Future<void> testConnection() async {
+    try {
+      final response = await dio.get('/swagger-ui/index.html');
+
+      print('API connected: ${response.statusCode}');
+    } catch (e) {
+      print('API connection failed: $e');
+    }
+  }
+}
+
+
+===== lib\core\storage\token_storage.dart =====
+
+import 'package:flutter_sms/core/storage/session_storage.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+class TokenStorage {
+  static const String _tokenKey = 'auth_token';
+
+  Future<void> saveToken(String token) async {
+    final prefs = await SharedPreferences.getInstance();
+
+    await prefs.setString(_tokenKey, token);
+  }
+
+  Future<String?> getToken() async {
+    final prefs = await SharedPreferences.getInstance();
+
+    return prefs.getString(_tokenKey);
+  }
+
+  /// Logout: removes the token and the saved role/name.
+  Future<void> clearToken() async {
+    final prefs = await SharedPreferences.getInstance();
+
+    await prefs.remove(_tokenKey);
+    await SessionStorage().clear();
+  }
+}
+
+
+===== lib\features\mission\data\models\mission_response.dart =====
+
+class MissionResponse {
+  final int id;
+  final String missionCode;
+  final int requesterId;
+  final String requesterName;
+
+  final String position;
+  final String functionName;
+  final String business;
+  final String jobLevel;
+
+  final String basedLocation;
+  final String destinationLocation;
+  final String locationTier;
+
+  final String travelObjectives;
+
+  final String departureDate;
+  final String departureTime;
+
+  final String arrivalDate;
+  final String arrivalTime;
+
+  final int numberOfTravelDays;
+
+  final double? breakfastAmount;
+  final int? breakfastQuantity;
+  final double? breakfastTotal;
+
+  final double? lunchAmount;
+  final int? lunchQuantity;
+  final double? lunchTotal;
+
+  final double? dinnerAmount;
+  final int? dinnerQuantity;
+  final double? dinnerTotal;
+
+  final double? accommodationAmountPerNight;
+  final int? numberOfNightStay;
+  final double? accommodationTotal;
+
+  final double? totalExpense;
+
+  final String description;
+  final String status;
+  final String? currentApprovalStep;
+
+  final String createdAt;
+  final String updatedAt;
+
+  final String missionType;
+
+  final List<MissionParticipant> participants;
+
+  MissionResponse({
+    required this.id,
+    required this.missionCode,
+    required this.requesterId,
+    required this.requesterName,
+    required this.position,
+    required this.functionName,
+    required this.business,
+    required this.jobLevel,
+    required this.basedLocation,
+    required this.destinationLocation,
+    required this.locationTier,
+    required this.travelObjectives,
+    required this.departureDate,
+    required this.departureTime,
+    required this.arrivalDate,
+    required this.arrivalTime,
+    required this.numberOfTravelDays,
+    this.breakfastAmount,
+    this.breakfastQuantity,
+    this.breakfastTotal,
+    this.lunchAmount,
+    this.lunchQuantity,
+    this.lunchTotal,
+    this.dinnerAmount,
+    this.dinnerQuantity,
+    this.dinnerTotal,
+    this.accommodationAmountPerNight,
+    this.numberOfNightStay,
+    this.accommodationTotal,
+    this.totalExpense,
+    required this.description,
+    required this.status,
+    this.currentApprovalStep,
+    required this.createdAt,
+    required this.updatedAt,
+    required this.missionType,
+    required this.participants,
+  });
+
+  factory MissionResponse.fromJson(Map<String, dynamic> json) {
+    return MissionResponse(
+      id: json['id'] as int,
+      missionCode: json['missionCode'] as String,
+      requesterId: json['requesterId'] as int,
+      requesterName: json['requesterName'] as String,
+
+      position: json['position'] as String,
+      functionName: json['functionName'] as String,
+      business: json['business'] as String,
+      jobLevel: json['jobLevel'] as String,
+
+      basedLocation: json['basedLocation'] as String,
+      destinationLocation: json['destinationLocation'] as String,
+      locationTier: json['locationTier'] as String,
+
+      travelObjectives: json['travelObjectives'] as String,
+
+      departureDate: json['departureDate'] as String,
+      departureTime: json['departureTime'] as String,
+
+      arrivalDate: json['arrivalDate'] as String,
+      arrivalTime: json['arrivalTime'] as String,
+
+      numberOfTravelDays: json['numberOfTravelDays'] as int,
+
+      breakfastAmount: (json['breakfastAmount'] as num?)?.toDouble(),
+      breakfastQuantity: json['breakfastQuantity'] as int?,
+      breakfastTotal: (json['breakfastTotal'] as num?)?.toDouble(),
+
+      lunchAmount: (json['lunchAmount'] as num?)?.toDouble(),
+      lunchQuantity: json['lunchQuantity'] as int?,
+      lunchTotal: (json['lunchTotal'] as num?)?.toDouble(),
+
+      dinnerAmount: (json['dinnerAmount'] as num?)?.toDouble(),
+      dinnerQuantity: json['dinnerQuantity'] as int?,
+      dinnerTotal: (json['dinnerTotal'] as num?)?.toDouble(),
+
+      accommodationAmountPerNight: (json['accommodationAmountPerNight'] as num?)
+          ?.toDouble(),
+
+      numberOfNightStay: json['numberOfNightStay'] as int?,
+
+      accommodationTotal: (json['accommodationTotal'] as num?)?.toDouble(),
+
+      totalExpense: (json['totalExpense'] as num?)?.toDouble(),
+
+      description: json['description'] as String,
+      status: json['status'] as String,
+      currentApprovalStep: json['currentApprovalStep'] as String?,
+
+      createdAt: json['createdAt'] as String,
+      updatedAt: json['updatedAt'] as String,
+
+      missionType: json['missionType'] as String,
+
+      participants: (json['participants'] as List<dynamic>? ?? [])
+          .map(
+            (item) => MissionParticipant.fromJson(item as Map<String, dynamic>),
+          )
+          .toList(),
+    );
+  }
+}
+
+class MissionParticipant {
+  final int id;
+  final int employeeId;
+  final String employeeCode;
+  final String fullName;
+  final String jobLevel;
+  final String functionName;
+  final String business;
+  final bool requester;
+
+  final double breakfastTotal;
+  final double lunchTotal;
+  final double dinnerTotal;
+  final double accommodationTotal;
+  final double totalExpense;
+
+  MissionParticipant({
+    required this.id,
+    required this.employeeId,
+    required this.employeeCode,
+    required this.fullName,
+    required this.jobLevel,
+    required this.functionName,
+    required this.business,
+    required this.requester,
+    required this.breakfastTotal,
+    required this.lunchTotal,
+    required this.dinnerTotal,
+    required this.accommodationTotal,
+    required this.totalExpense,
+  });
+
+  factory MissionParticipant.fromJson(Map<String, dynamic> json) {
+    return MissionParticipant(
+      id: json['id'] as int,
+      employeeId: json['employeeId'] as int,
+      employeeCode: json['employeeCode'] as String,
+      fullName: json['fullName'] as String,
+      jobLevel: json['jobLevel'] as String,
+      functionName: json['functionName'] as String,
+      business: json['business'] as String,
+      requester: json['requester'] as bool,
+      breakfastTotal: (json['breakfastTotal'] as num? ?? 0).toDouble(),
+      lunchTotal: (json['lunchTotal'] as num? ?? 0).toDouble(),
+      dinnerTotal: (json['dinnerTotal'] as num? ?? 0).toDouble(),
+      accommodationTotal: (json['accommodationTotal'] as num? ?? 0).toDouble(),
+      totalExpense: (json['totalExpense'] as num? ?? 0).toDouble(),
+    );
+  }
+}
+
+
+===== lib\features\mission\data\mission_repository.dart =====
+
+import '../../../core/network/dio_client.dart';
+import 'models/create_mission_request.dart';
+import 'models/employee.dart';
+import 'models/mission_response.dart';
+
+class MissionRepository {
+  final DioClient _dioClient;
+
+  MissionRepository(this._dioClient);
+
+  Future<MissionResponse> createMission(CreateMissionRequest request) async {
+    final response = await _dioClient.dio.post(
+      '/api/missions',
+      data: request.toJson(),
+    );
+
+    final responseData = response.data as Map<String, dynamic>;
+
+    final data = responseData['data'];
+
+    if (data is Map<String, dynamic>) {
+      return MissionResponse.fromJson(data);
+    }
+
+    return MissionResponse.fromJson(responseData);
+  }
+
+  Future<MissionResponse> getMission(int id) async {
+    final response = await _dioClient.dio.get('/api/missions/$id');
+
+    final responseData = response.data as Map<String, dynamic>;
+
+    final data = responseData['data'];
+
+    if (data is Map<String, dynamic>) {
+      return MissionResponse.fromJson(data);
+    }
+
+    return MissionResponse.fromJson(responseData);
+  }
+
+  Future<List<MissionResponse>> getMissions() async {
+    final response = await _dioClient.dio.get('/api/missions');
+
+    final responseData = response.data as Map<String, dynamic>;
+
+    final data = responseData['data'];
+
+    if (data is Map<String, dynamic>) {
+      final items = data['items'] as List<dynamic>? ?? [];
+
+      return items
+          .map((item) => MissionResponse.fromJson(item as Map<String, dynamic>))
+          .toList();
+    }
+
+    final items = responseData['items'] as List<dynamic>? ?? [];
+
+    return items
+        .map((item) => MissionResponse.fromJson(item as Map<String, dynamic>))
+        .toList();
+  }
+
+  Future<void> deleteMission(int id) async {
+    await _dioClient.dio.delete('/api/missions/$id');
+  }
+
+  Future<void> updateParticipants(
+    int missionId,
+    List<int> participantIds,
+  ) async {
+    await _dioClient.dio.put(
+      '/api/missions/$missionId/participants',
+      data: {'participantIds': participantIds},
+    );
+  }
+
+  Future<List<Employee>> getEmployees() async {
+    final response = await _dioClient.dio.get('/api/users');
+
+    final responseData = response.data as Map<String, dynamic>;
+
+    final data = responseData['data'];
+
+    if (data is Map<String, dynamic>) {
+      final items = data['items'] as List<dynamic>? ?? [];
+
+      return items
+          .map((item) => Employee.fromJson(item as Map<String, dynamic>))
+          .where((employee) => employee.isActive)
+          .toList();
+    }
+
+    return [];
+  }
+}
+
